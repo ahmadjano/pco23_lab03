@@ -37,13 +37,22 @@ void Wholesale::buyResources() {
 
     interface->consoleAppendText(uniqueId, QString("I would like to buy %1 of ").arg(qty) %
                                  getItemName(i) % QString(" which would cost me %1").arg(price));
-    /* TODO */
-    if (price < money) {
+
+    // Ensure that we have enough money to buy what we want.
+    if (price <= money) {
+
+        // Request the trade to Extractor/Factory.
         int facture = s->trade(i, qty);
 
+        // If the seller accepted the purchase.
         if (facture > 0) {
             money -= facture;
             stocks.at(i) += qty;
+
+            interface->consoleAppendText(uniqueId, QString("Bought %1 of ").arg(qty) %
+                                         getItemName(i) % QString(" for %1").arg(price));
+        } else {
+            interface->consoleAppendText(uniqueId, QString("Not enough money"));
         }
     }
 }
