@@ -28,7 +28,7 @@ int Extractor::trade(ItemType it, int qty) {
     // Accept the purchase otherwise.
     int cost = getMaterialCost() * qty;
 
-    getItemsForSale().at(it) -= qty;
+    getItemsForSale().at(it) -= qty; // Update the stock.
     money += cost;
 
     return cost;
