@@ -49,10 +49,21 @@ void Factory::buildItem() {
 
     // TODO
 
+    int employeeCost = getEmployeeSalary(getEmployeeThatProduces(itemBuilt));
+    if (money < employeeCost) {
+        /* Pas assez d'argent */
+        PcoThread::usleep(1000U);
+        return;
+    }
+
+    money -= employeeCost;
+
     //Temps simulant l'assemblage d'un objet.
     PcoThread::usleep((rand() % 100) * 100000);
 
     // TODO
+
+    stocks[itemBuilt] += 1;
 
     interface->consoleAppendText(uniqueId, "Factory have build a new object");
 }
@@ -60,6 +71,25 @@ void Factory::buildItem() {
 void Factory::orderResources() {
 
     // TODO - Itérer sur les resourcesNeeded et les wholesalers disponibles
+    for(ItemType item : resourcesNeeded) {
+
+        int qty = rand() % 5 + 1;
+        int price = qty * getCostPerUnit(item);
+
+        if (money < price) {
+            continue;
+        }
+
+        for (Wholesale* wholesaler : wholesalers) {
+
+            int facture = wholesaler->trade(item, qty);
+            //int facture = 0;
+            if (facture > 0 ) {
+                money -= facture;
+                stocks[item] += qty;
+            }
+        }
+    }
 
     //Temps de pause pour éviter trop de demande
     PcoThread::usleep(10 * 100000);
@@ -90,8 +120,18 @@ std::map<ItemType, int> Factory::getItemsForSale() {
 }
 
 int Factory::trade(ItemType it, int qty) {
-    // TODO
-    return 0;
+    // Refuse the trade request if we don't have enough stock.
+    if (stocks[it] < qty) {
+        return 0;
+    }
+
+    // Accept the purchase otherwise.
+    int cost = getCostPerUnit(it) * qty;
+
+    stocks[it] -= qty; // Update the stock.
+    money += cost;
+
+    return cost;
 }
 
 int Factory::getAmountPaidToWorkers() {

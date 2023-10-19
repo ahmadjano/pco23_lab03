@@ -50,7 +50,7 @@ void Wholesale::buyResources() {
     // If the seller accepted the purchase.
     if (facture > 0) {
         money -= facture; // `facture` should be equal to `price` here.
-        stocks.at(i) += qty;
+        stocks[i] += qty; // The use of .at() here caused a bug.
 
         interface->consoleAppendText(uniqueId, QString("Bought %1 ").arg(qty) %
                                      getItemName(i) % QString(" for %1").arg(price));
@@ -85,10 +85,18 @@ std::map<ItemType, int> Wholesale::getItemsForSale() {
 }
 
 int Wholesale::trade(ItemType it, int qty) {
+    // Refuse the trade request if we don't have enough stock.
+    if (stocks[it] < qty) {
+        return 0;
+    }
 
-    // TODO
+    // Accept the purchase otherwise.
+    int cost = getCostPerUnit(it) * qty;
 
-    return 0;
+    stocks[it] -= qty; // Update the stock.
+    money += cost;
+
+    return cost;
 }
 
 void Wholesale::setInterface(WindowInterface *windowInterface) {
