@@ -21,14 +21,14 @@ std::map<ItemType, int> Extractor::getItemsForSale() {
 int Extractor::trade(ItemType it, int qty) {
 
     // Refuse the trade request if we don't have enough stock.
-    if (stocks.at(it) < qty) {
+    if (getItemsForSale().at(it) < qty) { // getItemsForSale() and `stocks` are interchangable here.
         return 0;
     }
 
     // Accept the purchase otherwise.
     int cost = getMaterialCost() * qty;
 
-    stocks.at(it) -= qty;
+    getItemsForSale().at(it) -= qty;
     money += cost;
 
     return cost;

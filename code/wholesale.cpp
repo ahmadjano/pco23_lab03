@@ -46,10 +46,10 @@ void Wholesale::buyResources() {
 
         // If the seller accepted the purchase.
         if (facture > 0) {
-            money -= facture;
+            money -= facture; // `facture` should be equal to `price` here.
             stocks.at(i) += qty;
 
-            interface->consoleAppendText(uniqueId, QString("Bought %1 of ").arg(qty) %
+            interface->consoleAppendText(uniqueId, QString("Bought %1 ").arg(qty) %
                                          getItemName(i) % QString(" for %1").arg(price));
         } else {
             interface->consoleAppendText(uniqueId, QString("Not enough money"));
