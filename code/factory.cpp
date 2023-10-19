@@ -48,11 +48,32 @@ bool Factory::verifyResources() {
 void Factory::buildItem() {
 
     // TODO
+    //Vérifier qu'on puisse payer l'employé pour assembler l'objet
+    int employeCost = getEmployeeSalary(getEmployeeThatProduces(getItemBuilt()));
+    if (money < employeCost) {
+        /* Pas assez d'argent*/
+        /* Attend des jours meilleurs */
+        return;
+    }
+
+    //Payer l'employé
+    money -= employeCost;
 
     //Temps simulant l'assemblage d'un objet.
     PcoThread::usleep((rand() % 100) * 100000);
 
-    // TODO
+    // TODO´
+    //Diminuer de 1 les ressources utilisés pour construire
+    for (ItemType item : resourcesNeeded) {
+        stocks[item]--;
+    }
+
+    //Construction d'un objet
+    //Statistique
+    nbBuild++;
+
+    //Incrémentation du stock
+    stocks[itemBuilt]++;
 
     interface->consoleAppendText(uniqueId, "Factory have build a new object");
 }
@@ -60,6 +81,30 @@ void Factory::buildItem() {
 void Factory::orderResources() {
 
     // TODO - Itérer sur les resourcesNeeded et les wholesalers disponibles
+    for(ItemType it : resourcesNeeded){
+        for(Wholesale* w : wholesalers){
+
+            int price = getCostPerUnit(it);
+
+            if(price > money){
+                interface->consoleAppendText(uniqueId, QString("Not enough money"));
+                return;
+            }
+
+            int facture = w->trade(it, 1);
+
+            if (facture > 0) {
+                money -= facture; // `facture` should be equal to `price` here.
+                stocks[it]++;
+
+                interface->consoleAppendText(uniqueId, QString("Bought %1 ").arg(1) %
+                                             getItemName(it) % QString(" for %1").arg(price));
+            } else {
+                interface->consoleAppendText(uniqueId, QString("Seller has shortage in stock."));
+            }
+
+        }
+    }
 
     //Temps de pause pour éviter trop de demande
     PcoThread::usleep(10 * 100000);
@@ -91,7 +136,15 @@ std::map<ItemType, int> Factory::getItemsForSale() {
 
 int Factory::trade(ItemType it, int qty) {
     // TODO
-    return 0;
+
+    if(stocks.at(it) < qty){
+        return 0;
+    }
+    int cost = getMaterialCost() * qty;
+    stocks.at(it) -= qty;
+    money += cost;
+
+    return cost;
 }
 
 int Factory::getAmountPaidToWorkers() {

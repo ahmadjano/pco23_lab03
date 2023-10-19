@@ -85,10 +85,17 @@ std::map<ItemType, int> Wholesale::getItemsForSale() {
 }
 
 int Wholesale::trade(ItemType it, int qty) {
+    if (stocks[it] < qty) {
+        return 0;
+    }
 
-    // TODO
+    // Accept the purchase otherwise.
+    int cost = getCostPerUnit(it) * qty;
 
-    return 0;
+    getItemsForSale().at(it) -= qty; // Update the stock.
+    money += cost;
+
+    return cost;
 }
 
 void Wholesale::setInterface(WindowInterface *windowInterface) {
