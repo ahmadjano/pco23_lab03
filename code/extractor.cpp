@@ -20,8 +20,16 @@ std::map<ItemType, int> Extractor::getItemsForSale() {
 
 int Extractor::trade(ItemType it, int qty) {
     // TODO
+    if (stocks.at(it) < qty) {
+        return 0;
+    }
 
-    return 0;
+    int cost = getMaterialCost() * qty;
+
+    stocks.at(it) -= qty;
+    money += cost;
+
+    return cost;
 }
 
 void Extractor::run() {

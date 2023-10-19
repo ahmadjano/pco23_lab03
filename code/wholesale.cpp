@@ -38,6 +38,14 @@ void Wholesale::buyResources() {
     interface->consoleAppendText(uniqueId, QString("I would like to buy %1 of ").arg(qty) %
                                  getItemName(i) % QString(" which would cost me %1").arg(price));
     /* TODO */
+    if (price < money) {
+        int facture = s->trade(i, qty);
+
+        if (facture > 0) {
+            money -= facture;
+            stocks.at(i) += qty;
+        }
+    }
 }
 
 void Wholesale::run() {
