@@ -124,7 +124,7 @@ void Factory::run() {
     }
     interface->consoleAppendText(uniqueId, "[START] Factory routine");
 
-    while (true /* TODO terminaison*/) {
+    while (!PcoThread::thisThread()->stopRequested()) {
         if (verifyResources()) {
             buildItem();
         } else {

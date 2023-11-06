@@ -44,7 +44,7 @@ void Extractor::run() {
 
     interface->consoleAppendText(uniqueId, "[START] Mine routine");
 
-    while (true /* TODO terminaison*/) {
+    while (!PcoThread::thisThread()->stopRequested()) {
         /* TODO concurrence */
 
         int minerCost = getEmployeeSalary(getEmployeeThatProduces(resourceExtracted));

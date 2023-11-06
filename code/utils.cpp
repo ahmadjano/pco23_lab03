@@ -2,7 +2,9 @@
 
 
 void Utils::endService() {
-    // TODO
+    for (auto& thread: threads) {
+        thread->requestStop();
+    }
     std::cout << "It's time to end !" << std::endl;
 }
 
