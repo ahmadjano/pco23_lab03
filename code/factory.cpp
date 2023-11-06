@@ -3,10 +3,10 @@
 #include "costs.h"
 #include "wholesale.h"
 #include <pcosynchro/pcothread.h>
+#include <pcosynchro/pcomutex.h>
 #include <iostream>
 
 WindowInterface* Factory::interface = nullptr;
-
 
 Factory::Factory(int uniqueId, int fund, ItemType builtItem, std::vector<ItemType> resourcesNeeded)
     : Seller(fund, uniqueId), resourcesNeeded(resourcesNeeded), itemBuilt(builtItem), nbBuild(0)
@@ -46,6 +46,7 @@ bool Factory::verifyResources() {
 }
 
 void Factory::buildItem() {
+    PcoMutex mutex;
 
     // TODO
     //Vérifier qu'on puisse payer l'employé pour assembler l'objet
@@ -56,11 +57,9 @@ void Factory::buildItem() {
         return;
     }
 
+    mutex.lock();
     //Payer l'employé
     money -= employeCost;
-
-    //Temps simulant l'assemblage d'un objet.
-    PcoThread::usleep((rand() % 100) * 100000);
 
     // TODO´
     //Diminuer de 1 les ressources utilisés pour construire
@@ -74,11 +73,16 @@ void Factory::buildItem() {
 
     //Incrémentation du stock
     stocks[itemBuilt]++;
+    mutex.unlock();
+
+    //Temps simulant l'assemblage d'un objet.
+    PcoThread::usleep((rand() % 100) * 100000);
 
     interface->consoleAppendText(uniqueId, "Factory have build a new object");
 }
 
 void Factory::orderResources() {
+    PcoMutex mutex;
 
     // TODO - Itérer sur les resourcesNeeded et les wholesalers disponibles
     for(ItemType it : resourcesNeeded){
@@ -94,8 +98,10 @@ void Factory::orderResources() {
             int facture = w->trade(it, 1);
 
             if (facture > 0) {
+                mutex.lock();
                 money -= facture; // `facture` should be equal to `price` here.
                 stocks[it]++;
+                mutex.unlock();
 
                 interface->consoleAppendText(uniqueId, QString("Bought %1 ").arg(1) %
                                              getItemName(it) % QString(" for %1").arg(price));
@@ -135,14 +141,17 @@ std::map<ItemType, int> Factory::getItemsForSale() {
 }
 
 int Factory::trade(ItemType it, int qty) {
-    // TODO
+    PcoMutex mutex;
 
     if(stocks.at(it) < qty){
         return 0;
     }
     int cost = getMaterialCost() * qty;
+
+    mutex.lock();
     stocks.at(it) -= qty;
     money += cost;
+    mutex.unlock();
 
     return cost;
 }
