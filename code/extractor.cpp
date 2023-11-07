@@ -1,7 +1,6 @@
 #include "extractor.h"
 #include "costs.h"
 #include <pcosynchro/pcothread.h>
-#include <pcosynchro/pcomutex.h>
 
 WindowInterface* Extractor::interface = nullptr;
 
@@ -20,15 +19,15 @@ std::map<ItemType, int> Extractor::getItemsForSale() {
 }
 
 int Extractor::trade(ItemType it, int qty) {
-    PcoMutex mutex;
+    mutex.lock();
 
     // Refuse the trade request if we don't have enough stock.
     if (getItemsForSale().at(it) < qty) { // getItemsForSale() and `stocks` are interchangable here.
+        mutex.unlock();
         return 0;
     }
 
 
-    mutex.lock();
     // Accept the purchase otherwise.
     int cost = getMaterialCost() * qty;
 
@@ -40,22 +39,21 @@ int Extractor::trade(ItemType it, int qty) {
 }
 
 void Extractor::run() {
-    PcoMutex mutex;
-
     interface->consoleAppendText(uniqueId, "[START] Mine routine");
 
     while (!PcoThread::thisThread()->stopRequested()) {
         /* TODO concurrence */
 
         int minerCost = getEmployeeSalary(getEmployeeThatProduces(resourceExtracted));
+        mutex.lock();
         if (money < minerCost) {
             /* Pas assez d'argent */
             /* Attend des jours meilleurs */
+            mutex.unlock();
             PcoThread::usleep(1000U);
             continue;
         }
 
-        mutex.lock();
         /* On peut payer un mineur */
         money -= minerCost;
         /* Statistiques */

@@ -4,6 +4,7 @@
 #include "windowinterface.h"
 #include "seller.h"
 
+
 class Wholesale;
 
 /**

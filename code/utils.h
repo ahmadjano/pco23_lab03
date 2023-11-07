@@ -28,7 +28,6 @@ class Utils {
 public:
     void externalEndService();
     QString getFinalReport();
-
 private:
     std::vector<Extractor*> extractors;
     std::vector<Factory*> factories;

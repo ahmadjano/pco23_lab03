@@ -1,6 +1,5 @@
 #include "utils.h"
 
-
 void Utils::endService() {
     for (auto& thread: threads) {
         thread->requestStop();

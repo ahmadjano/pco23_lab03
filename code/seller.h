@@ -5,6 +5,7 @@
 #include <QStringBuilder>
 #include <map>
 #include <vector>
+#include <pcosynchro/pcomutex.h>
 #include "costs.h"
 
 enum class ItemType { Sand, Copper, Petrol, Chip, Plastic, Robot, Nothing};
@@ -64,6 +65,7 @@ protected:
     std::map<ItemType, int> stocks;
     int money;
     int uniqueId;
+    PcoMutex mutex;
 };
 
 #endif // SELLER_H

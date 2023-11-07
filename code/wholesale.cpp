@@ -3,7 +3,6 @@
 #include "costs.h"
 #include <iostream>
 #include <pcosynchro/pcothread.h>
-#include <pcosynchro/pcomutex.h>
 
 WindowInterface* Wholesale::interface = nullptr;
 
@@ -24,8 +23,6 @@ void Wholesale::setSellers(std::vector<Seller*> sellers) {
 }
 
 void Wholesale::buyResources() {
-    PcoMutex mutex;
-
     auto s = Seller::chooseRandomSeller(sellers);
     auto m = s->getItemsForSale();
     auto i = Seller::chooseRandomItem(m);
@@ -42,8 +39,10 @@ void Wholesale::buyResources() {
                                  getItemName(i) % QString(" which would cost me %1").arg(price));
 
     // Ensure that we have enough money to buy what we want.
+    mutex.lock();
     if (price > money) {
         interface->consoleAppendText(uniqueId, QString("Not enough money"));
+        mutex.unlock();
         return;
     }
 
@@ -90,16 +89,16 @@ std::map<ItemType, int> Wholesale::getItemsForSale() {
 }
 
 int Wholesale::trade(ItemType it, int qty) {
-    PcoMutex mutex;
+    mutex.lock();
 
     if (stocks[it] < qty) {
+        mutex.unlock();
         return 0;
     }
 
     // Accept the purchase otherwise.
     int cost = getCostPerUnit(it) * qty;
 
-    mutex.lock();
     getItemsForSale().at(it) -= qty; // Update the stock.
     money += cost;
     mutex.unlock();
