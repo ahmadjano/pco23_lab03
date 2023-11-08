@@ -46,18 +46,17 @@ bool Factory::verifyResources() {
 }
 
 void Factory::buildItem() {
-    PcoMutex mutex;
-
     // TODO
     //Vérifier qu'on puisse payer l'employé pour assembler l'objet
     int employeCost = getEmployeeSalary(getEmployeeThatProduces(getItemBuilt()));
+    mutex.lock();
     if (money < employeCost) {
         /* Pas assez d'argent*/
         /* Attend des jours meilleurs */
+        mutex.unlock();
         return;
     }
 
-    mutex.lock();
     //Payer l'employé
     money -= employeCost;
 
@@ -82,18 +81,19 @@ void Factory::buildItem() {
 }
 
 void Factory::orderResources() {
-    PcoMutex mutex;
-
     // TODO - Itérer sur les resourcesNeeded et les wholesalers disponibles
     for(ItemType it : resourcesNeeded){
         for(Wholesale* w : wholesalers){
 
             int price = getCostPerUnit(it);
 
+            mutex.lock();
             if(price > money){
                 interface->consoleAppendText(uniqueId, QString("Not enough money"));
+                mutex.unlock();
                 return;
             }
+            mutex.unlock();
 
             int facture = w->trade(it, 1);
 
@@ -108,6 +108,7 @@ void Factory::orderResources() {
             } else {
                 interface->consoleAppendText(uniqueId, QString("Seller has shortage in stock."));
             }
+
 
         }
     }
@@ -141,14 +142,13 @@ std::map<ItemType, int> Factory::getItemsForSale() {
 }
 
 int Factory::trade(ItemType it, int qty) {
-    PcoMutex mutex;
-
+    mutex.lock();
     if(stocks.at(it) < qty){
+        mutex.unlock();
         return 0;
     }
     int cost = getMaterialCost() * qty;
 
-    mutex.lock();
     stocks.at(it) -= qty;
     money += cost;
     mutex.unlock();

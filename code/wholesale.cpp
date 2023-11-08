@@ -24,8 +24,6 @@ void Wholesale::setSellers(std::vector<Seller*> sellers) {
 }
 
 void Wholesale::buyResources() {
-    PcoMutex mutex;
-
     auto s = Seller::chooseRandomSeller(sellers);
     auto m = s->getItemsForSale();
     auto i = Seller::chooseRandomItem(m);
@@ -41,9 +39,11 @@ void Wholesale::buyResources() {
     interface->consoleAppendText(uniqueId, QString("I would like to buy %1 of ").arg(qty) %
                                  getItemName(i) % QString(" which would cost me %1").arg(price));
 
+    mutex.lock();
     // Ensure that we have enough money to buy what we want.
     if (price > money) {
         interface->consoleAppendText(uniqueId, QString("Not enough money"));
+        mutex.unlock();
         return;
     }
 
@@ -52,16 +52,15 @@ void Wholesale::buyResources() {
 
     // If the seller accepted the purchase.
     if (facture > 0) {
-        mutex.lock();
         money -= facture; // `facture` should be equal to `price` here.
         stocks.at(i) += qty;
-        mutex.unlock();
 
         interface->consoleAppendText(uniqueId, QString("Bought %1 ").arg(qty) %
                                      getItemName(i) % QString(" for %1").arg(price));
     } else {
         interface->consoleAppendText(uniqueId, QString("Seller has shortage in stock."));
     }
+    mutex.unlock();
 
 }
 
@@ -90,16 +89,15 @@ std::map<ItemType, int> Wholesale::getItemsForSale() {
 }
 
 int Wholesale::trade(ItemType it, int qty) {
-    PcoMutex mutex;
-
+    mutex.lock();
     if (stocks[it] < qty) {
+        mutex.unlock();
         return 0;
     }
 
     // Accept the purchase otherwise.
     int cost = getCostPerUnit(it) * qty;
 
-    mutex.lock();
     getItemsForSale().at(it) -= qty; // Update the stock.
     money += cost;
     mutex.unlock();
